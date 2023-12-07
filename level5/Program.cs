@@ -15,8 +15,8 @@ var maps = split.Skip(1).Select(x => x.Split(Environment.NewLine).Skip(1).Select
 
 ulong lowest = ulong.MaxValue;
 
-var a = new Range(12, 20);
-var b = new Range(7, 13);
+var a = new Range(10, 20);
+var b = new Range(12, 16);
 
 Console.WriteLine(a);
 Console.WriteLine(b);

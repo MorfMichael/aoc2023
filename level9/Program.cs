@@ -21,17 +21,17 @@ foreach (var history in histories)
     {
         if (i == differences.Count - 1)
         {
-            differences[i].Add(differences[i][^1]);
+            differences[i].Insert(0, differences[i][0]);
         }
         else
         {
-            differences[i].Add(differences[i][^1] + differences[i + 1][^1]);
+            differences[i].Insert(0, differences[i][0] - differences[i + 1][0]);
         }
     }
 
-    history.Add(differences[0][^1]);
+    history.Insert(0, differences[0][0]);
 
     Console.WriteLine(string.Join(Environment.NewLine, differences.Select(t => string.Join(" ", t))));
 }
 
-Console.WriteLine(string.Join(" + ", histories.Select(t => t[^1])) + " = " + histories.Sum(t => t[^1]));
+Console.WriteLine(string.Join(" + ", histories.Select(t => t[0])) + " = " + histories.Sum(t => t[0]));

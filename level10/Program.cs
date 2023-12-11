@@ -43,7 +43,6 @@ HashSet<(int X, int Y)> loop = new();
 while (queue.Count > 0)
 {
     var current = queue.Dequeue();
-    //Console.WriteLine(string.Join("", current.Select(t => map[t.Y][t.X])));
 
     if (current.Count > loop.Count)
     {
@@ -66,8 +65,6 @@ for (int y = 0; y < map.Length; y++)
     }
 }
 
-Print();
-
 var other = map2.Where(t => !loop.Contains((t.X, t.Y))).ToList();
 int count = 0;
 
@@ -84,165 +81,16 @@ Console.WriteLine(count);
 
 int Tryout(int x, int y, Direction direction)
 {
-    int count = 0;
-    if (direction == Direction.Up)
+    if (direction == Direction.Up || direction == Direction.Down)
     {
-        bool left = false, right = false;
-        for (int i = y-1; i >= 0; i--)
-        {
-            if (map[i][x] == '-') count++;
-            if (map[i][x] == '|') continue;
-            if (map[i][x] == 'J' || map[i][x] == '7')
-            {
-                if (left && !right)
-                    left = false;
-                else if (!left && right)
-                {
-                    right = false;
-                    count++;
-                }
-                else
-                {
-                    left = true;
-                }
-            }
-            if (map[i][x] == 'F' || map[i][x] == 'L')
-            {
-                if (right && !left)
-                {
-                    right = false;
-                }
-                else if (!right && left)
-                {
-                    left = false;
-                    count++;
-                }
-                else
-                {
-                    right = true;
-                }
-            }
-        }
+        var entries = direction == Direction.Up ? Enumerable.Range(0, y - 1).Select(t => map[t][x]) : Enumerable.Range(y + 1, map.Length - (y + 1)).Select(t => map[t][x]);
+        return entries.Count(t => t == '-') + (entries.Count(t => t == 'J' || t == '7') % 2) + (entries.Count(t => t == 'F' || t == 'L') % 2);
     }
-    else if (direction == Direction.Down)
+    else (direction == Direction.Left || direction == Direction.Right)
     {
-        bool left = false, right = false;
-        for (int i = y+1; i < map.Length; i++)
-        {
-            if (map[i][x] == '-') count++;
-            if (map[i][x] == '|') continue;
-            if (map[i][x] == 'J' || map[i][x] == '7')
-            {
-                if (left && !right)
-                    left = false;
-                else if (!left && right)
-                {
-                    right = false;
-                    count++;
-                }
-                else
-                {
-                    left = true;
-                }
-            }
-            if (map[i][x] == 'F' || map[i][x] == 'L')
-            {
-                if (right && !left)
-                {
-                    right = false;
-                }
-                else if (!right && left)
-                {
-                    left = false;
-                    count++;
-                }
-                else
-                {
-                    right = true;
-                }
-            }
-        }
+        var entries = direction == Direction.Left ? Enumerable.Range(0, x - 1).Select(t => map[y][t]) : Enumerable.Range(x + 1, map[y].Length - (x + 1)).Select(t => map[y][t]);
+        return entries.Count(t => t == '|') + (entries.Count(t => t == 'J' || t == 'L') % 2) + (entries.Count(t => t == 'F' || t == '7') % 2);
     }
-    else if (direction == Direction.Left)
-    {
-        bool up = false, down = false;
-        for (int i = x-1; i >= 0; i--)
-        {
-            if (map[y][i] == '|') count++;
-            if (map[y][i] == '-') continue;
-            if (map[y][i] == 'J' || map[y][i] == 'L')
-            {
-                if (up && !down)
-                    up = false;
-                else if (!up && down)
-                {
-                    down = false;
-                    count++;
-                }
-                else
-                {
-                    up = true;
-                }
-            }
-            if (map[y][i] == 'F' || map[y][i] == '7')
-            {
-                if (down && !up)
-                {
-                    down = false;
-                }
-                else if (!down && up)
-                {
-                    up = false;
-                    count++;
-                }
-                else
-                {
-                    down = true;
-                }
-            }
-        }
-    }
-    else if (direction == Direction.Right)
-    {
-        bool up = false, down = false;
-        for (int i = x+1; i < map[0].Length; i++)
-        {
-            if (map[y][i] == '|') count++;
-            if (map[y][i] == '-') continue;
-            if (map[y][i] == 'J' || map[y][i] == 'L')
-            {
-                if (up && !down)
-                    up = false;
-                else if (!up && down)
-                {
-                    down = false;
-                    count++;
-                }
-                else
-                {
-                    up = true;
-                }
-            }
-            if (map[y][i] == 'F' || map[y][i] == '7')
-            {
-                if (down && !up)
-                {
-                    down = false;
-                }
-                else if (!down && up)
-                {
-                    up = false;
-                    count++;
-                }
-                else
-                {
-                    down = true;
-                }
-            }
-        }
-    }
-
-    return count;
 }
 
 List<(int X, int Y)> GetNeighbours(List<(int X, int Y)> previous)
@@ -291,64 +139,6 @@ List<(int X, int Y)> GetNeighbours(List<(int X, int Y)> previous)
 
     }
     return neighbours.Select(t => (t.X, t.Y)).ToList();
-}
-
-//List<(int X, int Y)> GetInsideout(int X, int Y, bool insideout, HashSet<(int X, int Y)> visited)
-//{
-//    List<(int X, int Y)> result = new List<(int X, int Y)>();
-//    char ch = map[Y][X];
-
-//    result = ch switch
-//    {
-//        'F' => insideout ? [(X - 1, Y - 1), (X, Y - 1), (X + 1, Y - 1), (X - 1, Y), (X - 1, Y + 1)] : [(X + 1, Y + 1)],
-//        '7' => insideout ? [(X - 1, Y - 1), (X, Y - 1), (X + 1, Y - 1), (X + 1, Y), (X + 1, Y + 1)] : [(X - 1, Y + 1)],
-//        'L' => insideout ? [(X - 1, Y - 1), (X - 1, Y), (X - 1, Y + 1), (X, Y + 1), (X + 1, Y + 1)] : [(X + 1, Y - 1)],
-//        'J' => insideout ? [(X + 1, Y - 1), (X + 1, Y), (X - 1, Y + 1), (X, Y + 1), (X + 1, Y + 1)] : [(X - 1, Y - 1)],
-//        '|' => insideout ? [(X - 1, Y - 1), (X - 1, Y), (X - 1, Y + 1)] : [(X + 1, Y - 1), (X + 1, Y), (X + 1, Y + 1)],
-//        '-' => insideout ? [(X - 1, Y - 1), (X, Y - 1), (X + 1, Y - 1)] : [(X - 1, Y + 1), (X, Y + 1), (X + 1, Y + 1)],
-//        _ => [],
-//    };
-
-//    return result.Where(t => t.X >= 0 && t.X < map[0].Length && t.Y >= 0 && t.Y < map.Length && !visited.Contains(t)).ToList();
-//}
-
-//List<(int X, int Y)> GetSurrounding(int X, int Y, HashSet<(int X, int Y)> visited)
-//{
-//    List<(int X, int Y)> result = [(X - 1, Y - 1), (X, Y - 1), (X + 1, Y - 1), (X - 1, Y), (X + 1, Y), (X - 1, Y + 1), (X, Y + 1), (X + 1, Y + 1)];
-//    return result.Where(t => t.X >= 0 && t.X < map[0].Length && t.Y >= 0 && t.Y < map.Length && !visited.Contains(t)).ToList();
-//}
-
-
-void Print()
-{
-    Console.Clear();
-    for (int y = 0; y < map.Length; y++)
-    {
-        for (int x = 0; x < map[y].Length; x++)
-        {
-            bool contains = loop.Contains((x, y));
-            Console.ForegroundColor = contains ? ConsoleColor.Green : ConsoleColor.White;
-            if (map[y][x] == 'S') Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write(contains ? Replace(map[y][x]) : '#');
-        }
-        Console.WriteLine();
-    }
-
-    //if (read) Console.ReadKey();
-}
-
-char Replace(char input)
-{
-    return input switch
-    {
-        '-' => '─',
-        '|' => '│',
-        'F' => '┌',
-        '7' => '┐',
-        'L' => '└',
-        'J' => '┘',
-        _ => input
-    };
 }
 
 enum Direction

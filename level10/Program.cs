@@ -86,7 +86,7 @@ int Tryout(int x, int y, Direction direction)
         var entries = direction == Direction.Up ? Enumerable.Range(0, y - 1).Select(t => map[t][x]) : Enumerable.Range(y + 1, map.Length - (y + 1)).Select(t => map[t][x]);
         return entries.Count(t => t == '-') + (entries.Count(t => t == 'J' || t == '7') % 2) + (entries.Count(t => t == 'F' || t == 'L') % 2);
     }
-    else (direction == Direction.Left || direction == Direction.Right)
+    else
     {
         var entries = direction == Direction.Left ? Enumerable.Range(0, x - 1).Select(t => map[y][t]) : Enumerable.Range(x + 1, map[y].Length - (x + 1)).Select(t => map[y][t]);
         return entries.Count(t => t == '|') + (entries.Count(t => t == 'J' || t == 'L') % 2) + (entries.Count(t => t == 'F' || t == '7') % 2);

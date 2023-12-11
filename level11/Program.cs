@@ -17,7 +17,7 @@ int[] y_offsets = lines.Select((t, i) => new { Expanding = !t.Contains('#'), Ind
 int[] x_offsets = Enumerable.Range(0, lines[0].Length).Select(t => new { Expanding = !string.Join("", lines.Select(l => l[t])).Contains('#'), Index = t }).Where(t => t.Expanding).Select(t => t.Index).ToArray();
 
 int sum = 0;
-Dictionary<(int Start, int End), int> distances = new();
+Dictionary<(int Start, int End), long> distances = new();
 
 foreach (var start in galaxies)
 {
@@ -32,8 +32,8 @@ foreach (var start in galaxies)
         int x_steps = Math.Abs(end.Value.X - start.Value.X);
 
 
-        y_steps += y_offsets.Count(t => t >= Math.Min(start.Value.Y,end.Value.Y) && t <= Math.Max(start.Value.Y, end.Value.Y));
-        x_steps += x_offsets.Count(t => t >= Math.Min(start.Value.X, end.Value.X) && t <= Math.Max(start.Value.X, end.Value.X));
+        y_steps += y_offsets.Count(t => t >= Math.Min(start.Value.Y,end.Value.Y) && t <= Math.Max(start.Value.Y, end.Value.Y))* (1000000-1);
+        x_steps += x_offsets.Count(t => t >= Math.Min(start.Value.X, end.Value.X) && t <= Math.Max(start.Value.X, end.Value.X)) * (1000000-1);
 
         int steps = x_steps + y_steps;
 

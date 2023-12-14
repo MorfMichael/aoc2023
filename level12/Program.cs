@@ -1,61 +1,54 @@
-﻿using System.ComponentModel;
-using System.Diagnostics;
-using System.Runtime.InteropServices.Marshalling;
-using System.Text;
+﻿using System.Collections.Concurrent;
 
 string[] lines = File.ReadAllLines("input.txt");
 
-//string s = "...";
-//foreach (var perm in Permutations(s, [0, 1, 2]))
-//    Console.WriteLine(perm);
+long sum = 0;
+Dictionary<string, List<string>> history = new Dictionary<string, List<string>>();
+ConcurrentDictionary<string, long> cache = new();
 
-//return;
-
-int sum = 0;
-foreach (var line in lines)
+Parallel.ForEach(lines, line =>
 {
     var split = line.Split(' ');
-    var springs = split[0];
-    var groups = split[1].Split(",").Select(int.Parse).ToArray();
-
-
-    int[] pos = springs.Select((t, i) => new { t = t, i = i }).Where(t => t.t == '?').Select(t => t.i).ToArray();
-    var permutations = Permutations(springs.Replace("?", "."), pos);
-    //Console.WriteLine(permutations.Count());
-    permutations = permutations.Distinct();
-    //Console.WriteLine(permutations.Count());
-    //Console.WriteLine(string.Join(Environment.NewLine, permutations));
-    int c = permutations.Count(t => Match(t.ToString(), groups));
+    //string springs = split[0];
+    //int[] groups = split[1].Split(",").Select(int.Parse).ToArray();
+    var springs = string.Join("?", Enumerable.Range(0, 5).Select(t => split[0]));
+    string g = string.Join(",", Enumerable.Range(0, 5).Select(t => split[1]));
+    var groups = g.Split(",").Select(int.Parse).ToArray();
+    long count = Count(springs, groups);
     Console.WriteLine(line);
-    Console.WriteLine(c);
-    sum += c;
-}
+    Console.WriteLine(count);
+    sum += count;
+});
 
 Console.WriteLine(sum);
 
-IEnumerable<string> Permutations(string input, int[] positions, int depth = 0)
+
+long Count(string springs, int[] groups)
 {
-    if (depth == 0)
+    if (springs.Length == 0)
     {
-        yield return input;
+        return groups.Length == 0 ? 1 : 0;
     }
 
-    for (int i = 0; i < positions.Length; i++)
+    if (groups.Length == 0)
     {
-        string s = input.Remove(positions[i], 1).Insert(positions[i], "#");
-        yield return s;
-
-        foreach (var perm in Permutations(s, positions[(i+1)..], depth++))
-        {
-            yield return perm;
-        }
+        return springs.Contains("#") ? 0 : 1;
     }
-}
 
-bool Match(string springs, int[] groups)
-{
-    var grouped = springs.Split(".", StringSplitOptions.RemoveEmptyEntries).ToArray();
-    //var tmp = groups.Select((t, i) => grouped[i].Length == t).ToList();
-    return grouped.Count() == groups.Length && groups.Select((t, i) => grouped[i].Length == t).All(t => t);
+    string key = $"{springs};{string.Join(",", groups)}";
+    if (cache.ContainsKey(key)) return cache[key];
 
+    long result = 0;
+    if (".?".Contains(springs[0]))
+    {
+        result += Count(springs[1..], groups);
+    }
+
+    if ("#?".Contains(springs[0]))
+    {
+        if (springs.Length >= groups[0] && !springs[..groups[0]].Contains(".") && (springs.Length == groups[0] || springs[groups[0]] != '#'))
+            result += Count(springs.Substring(Math.Min(groups[0]+1, springs.Length)), groups[1..]);
+    }
+    cache.AddOrUpdate(key,result, (key,value) => result);
+    return result;
 }

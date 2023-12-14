@@ -39,20 +39,16 @@ string[] GetColumns(string[] lines)
 
 int Check(string[] lines)
 {
-    for (int i = 0; i < lines.Length; i++)
+    for (int i = 1; i < lines.Length; i++)
     {
-        int rcount = 0;
-        for (int j = 1; i - j >= 0 && i + j < lines.Length; j++)
-        {
-            if (lines[i - (j - 1)] == lines[i + j])
-                rcount++;
-        }
+        var top = lines[..i].Reverse().ToArray();
+        var bottom = lines[i..];
 
-        if (rcount > 0 && (rcount == i+1 || rcount + i == lines.Length - 1))
-        {
-            Console.WriteLine(i);
-            return i+1;
-        }
+        top = top.Take(bottom.Length).ToArray();
+        bottom = bottom.Take(top.Length).ToArray();
+
+        if (Enumerable.SequenceEqual(top, bottom))
+            return i;
     }
 
     return 0;

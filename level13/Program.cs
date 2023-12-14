@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices.JavaScript;
+﻿using System.Reflection.Metadata.Ecma335;
+using System.Runtime.InteropServices.JavaScript;
 
 string text = File.ReadAllText("input.txt");
 
@@ -12,45 +13,10 @@ for (int g = 0; g < groups.Length; g++)
     string[] lines = group.Split(Environment.NewLine);
     string[] columns = GetColumns(lines);
 
-    int hcount = 0;
-    int hreflection = 0;
-    for (int i = 0; i < lines.Length; i++)
-    {
-        int rcount = 0;
-        for (int j = 1; i - j >= 0 && i + j < lines.Length; j++)
-        {
-            if (lines[i - (j - 1)] == lines[i + j])
-                rcount++;
-        }
-
-        if (rcount > hcount)
-        {
-            hcount = rcount;
-            hreflection = i;
-            Console.WriteLine("horizontal reflection found: " + hreflection + ": " + hcount);
-        }
-    }
-
-    int vcount = 0;
-    int vreflection = 0;
-    for (int i = 0; i < columns.Length; i++)
-    {
-        int rcount = 0;
-        for (int j = 1; i - j >= 0 && i + j < columns.Length; j++)
-        {
-            if (columns[i - (j - 1)] == columns[i + j])
-                rcount++;
-        }
-
-        if (rcount > vcount)
-        {
-            vcount = rcount;
-            vreflection = i;
-            Console.WriteLine("vertical reflection found: " + vreflection + ": " + vcount);
-        }
-    }
-
-    sum += hcount > vcount ? 100 * (hreflection + 1) : vreflection + 1;
+    int horizontal = Check(lines);
+    sum += 100 * horizontal;
+    int vertical = Check(columns);
+    sum += vertical;
 }
 
 Console.WriteLine(sum);
@@ -69,4 +35,25 @@ string[] GetColumns(string[] lines)
         columns.Add(column);
     }
     return columns.ToArray();
+}
+
+int Check(string[] lines)
+{
+    for (int i = 0; i < lines.Length; i++)
+    {
+        int rcount = 0;
+        for (int j = 1; i - j >= 0 && i + j < lines.Length; j++)
+        {
+            if (lines[i - (j - 1)] == lines[i + j])
+                rcount++;
+        }
+
+        if (rcount > 0 && (rcount == i+1 || rcount + i == lines.Length - 1))
+        {
+            Console.WriteLine(i);
+            return i+1;
+        }
+    }
+
+    return 0;
 }

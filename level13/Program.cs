@@ -34,6 +34,7 @@ string[] GetColumns(string[] lines)
         {
             column += lines[i][j];
         }
+
         columns.Add(column);
     }
     return columns.ToArray();
@@ -41,22 +42,19 @@ string[] GetColumns(string[] lines)
 
 int Check(string[] lines)
 {
-    for (int i = 1; i < lines.Length; i++)
+    for (int i = 0; i < lines.Length-1; i++)
     {
-        var top = lines[..i].Reverse().ToArray();
-        var bottom = lines[i..];
-
-        top = top.Take(bottom.Length).ToArray();
-        bottom = bottom.Take(top.Length).ToArray();
-
-        int diff = 0;
-        for (int j = 0; j < top.Length; j++)
+        bool symmetrie = true;
+        for (int j = 1; i - (j-1) >= 0 && i + j < lines.Length; j++)
         {
-            diff += Compare(top[j], bottom[j]);
+            if (lines[i - (j - 1)] != lines[i + j]) symmetrie = false;
         }
 
-        if (diff == 1)
-            return i;
+        if (symmetrie == true)
+        {
+            Console.WriteLine(i+1);
+            return i+1;
+        }
     }
 
     return 0;

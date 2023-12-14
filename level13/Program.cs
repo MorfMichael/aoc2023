@@ -1,5 +1,7 @@
 ﻿using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices.JavaScript;
+using System.Runtime.Serialization;
+using System.Text;
 
 string text = File.ReadAllText("input.txt");
 
@@ -47,9 +49,39 @@ int Check(string[] lines)
         top = top.Take(bottom.Length).ToArray();
         bottom = bottom.Take(top.Length).ToArray();
 
-        if (Enumerable.SequenceEqual(top, bottom))
+        int diff = 0;
+        for (int j = 0; j < top.Length; j++)
+        {
+            diff += Compare(top[j], bottom[j]);
+        }
+
+        if (diff == 1)
             return i;
     }
 
     return 0;
 }
+
+int Compare(string a, string b)
+{
+    int count = 0;
+    for (int i = 0; i < a.Length; i++)
+    {
+        if (a[i] != b[i]) count++;
+    }
+
+    return count;
+}
+
+/*
+37359
+37360
+32932
+24466
+26223
+9131
+26277
+32754
+26223
+34202*
+*/

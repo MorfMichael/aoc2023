@@ -44,13 +44,13 @@ int Check(string[] lines)
 {
     for (int i = 0; i < lines.Length-1; i++)
     {
-        bool symmetrie = true;
-        for (int j = 1; i - (j-1) >= 0 && i + j < lines.Length; j++)
+        int failure = 0;
+        for (int j = 1; i - (j - 1) >= 0 && i + j < lines.Length; j++)
         {
-            if (lines[i - (j - 1)] != lines[i + j]) symmetrie = false;
+            failure += Compare(lines[i - (j - 1)], lines[i+j]);
         }
 
-        if (symmetrie == true)
+        if (failure==1)
         {
             Console.WriteLine(i+1);
             return i+1;

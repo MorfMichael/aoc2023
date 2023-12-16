@@ -5,91 +5,84 @@ string[] lines = File.ReadAllLines("input.txt");
 
 char[][] map = lines.Select(t => t.ToCharArray()).ToArray();
 
-ConcurrentDictionary<(int X, int Y), int> seen = new();
-Queue<(Guid Id, int X, int Y, Direction Direction)> queue = new();
+ConcurrentDictionary<(int X, int Y, Direction direction), int> seen = new();
+Queue<List<(int X, int Y, Direction Direction)>> queue = new();
 
-queue.Enqueue((Guid.NewGuid(), 0, 0, Direction.Right));
+queue.Enqueue([(0, 0, Direction.Right)]);
 
-int i = 0;
-int seen_c = 0;
-int last_i = 0;
 while (queue.Count > 0)
 {
-    i++;
-
-    if (i == last_i + 10_000_000)
-    {
-        last_i = i;
-        if (seen.Count == seen_c)
-        {
-            break;
-        }
-        else
-            seen_c = seen.Count;
-    }
-
     var c = queue.Dequeue();
+    var cp = c[^1];
 
-    seen.AddOrUpdate((c.X, c.Y), 1, (k,v) => v+1);
+    if (seen.ContainsKey(cp))
+        continue;
 
-    GetNext(c.Id, c.X, c.Y, c.Direction).ForEach(queue.Enqueue);
+    seen.AddOrUpdate(cp, 1, (k,v) => v+1);
+
+    var next = GetNext(cp.X, cp.Y, cp.Direction);
+    foreach (var n in next)
+    {
+        if (!c.Contains(n))
+        queue.Enqueue(c.Append(n).ToList());
+    }
 }
 
 Print();
 
-Console.WriteLine(seen.Count);
+Console.WriteLine(seen.Keys.Select(t => (t.X,t.Y)).Distinct().Count());
 
-List<(Guid Id, int X, int Y, Direction Direction)> GetNext(Guid id, int x, int y, Direction direction)
+List<(int X, int Y, Direction Direction)> GetNext(int x, int y, Direction direction)
 {
-    List<(Guid Id, int X, int Y, Direction Direction)> result = new();
+    List<(int X, int Y, Direction Direction)> result = new();
     if (map[y][x] == '.')
     {
         result = direction switch
         {
-            Direction.Up => [(id, x, y - 1, Direction.Up)],
-            Direction.Down => [(id, x, y + 1, Direction.Down)],
-            Direction.Left => [(id, x - 1, y, Direction.Left)],
-            Direction.Right => [(id, x + 1, y, Direction.Right)],
+            Direction.Up => [(x, y - 1, Direction.Up)],
+            Direction.Down => [(x, y + 1, Direction.Down)],
+            Direction.Left => [(x - 1, y, Direction.Left)],
+            Direction.Right => [(x + 1, y, Direction.Right)],
         };
     }
     else if (map[y][x] == '-')
     {
         result = direction switch
         {
-            Direction.Up => [(id, x - 1, y, Direction.Left), (Guid.NewGuid(), x + 1, y, Direction.Right)],
-            Direction.Down => [(id, x - 1, y, Direction.Left), (Guid.NewGuid(), x + 1, y, Direction.Right)],
-            Direction.Left => [(id, x - 1, y, Direction.Left)],
-            Direction.Right => [(id, x + 1, y, Direction.Right)],
+            Direction.Up => [(x - 1, y, Direction.Left), (x + 1, y, Direction.Right)],
+            Direction.Down => [(x - 1, y, Direction.Left), (x + 1, y, Direction.Right)],
+            Direction.Left => [(x - 1, y, Direction.Left)],
+            Direction.Right => [(x + 1, y, Direction.Right)],
         };
     }
     else if (map[y][x] == '|')
     {
         result = direction switch
         {
-            Direction.Up => [(id, x,y-1,Direction.Up)],
-            Direction.Down => [(id,x,y+1,Direction.Down)],
-            Direction.Left => [(id, x, y-1, Direction.Up), (Guid.NewGuid(), x, y+1, Direction.Down)],
-            Direction.Right => [(id, x, y - 1, Direction.Up), (Guid.NewGuid(), x, y + 1, Direction.Down)],
+            Direction.Up => [(x,y-1,Direction.Up)],
+            Direction.Down => [(x,y+1,Direction.Down)],
+            Direction.Left => [(x, y-1, Direction.Up), (x, y+1, Direction.Down)],
+            Direction.Right => [(x, y - 1, Direction.Up), (x, y + 1, Direction.Down)],
         };
     }
     else if (map[y][x] == '\\')
     {
         result = direction switch
         {
-            Direction.Up => [(id, x-1, y, Direction.Left)],
-            Direction.Down => [(id, x + 1, y, Direction.Right)],
-            Direction.Left => [(id, x, y - 1, Direction.Up)],
-            Direction.Right => [(id, x, y + 1, Direction.Down)],
+            Direction.Up => [(x-1, y, Direction.Left)],
+            Direction.Down => [(x + 1, y, Direction.Right)],
+            Direction.Left => [(x, y - 1, Direction.Up)],
+            Direction.Right => [(x, y + 1, Direction.Down)],
         };
     }
     else if (map[y][x] == '/')
     {
         result = direction switch
         {
-            Direction.Up => [(id, x + 1, y, Direction.Right)],
-            Direction.Down => [(id, x - 1, y, Direction.Left)],
-            Direction.Left => [(id, x, y + 1, Direction.Down)],
-            Direction.Right => [(id, x, y - 1, Direction.Up)],
+            Direction.Up => [(x + 1, y, Direction.Right)],
+            Direction.Down => [(x - 1, y, Direction.Left)],
+            Direction.Left => [(x, y + 1, Direction.Down)],
+            Direction.Right => [(x, y - 1, Direction.Up)],
         };
     }
 
@@ -103,7 +96,7 @@ void Print()
     {
         for (int x = 0; x < map[y].Length; x++)
         {
-            Console.Write(seen.ContainsKey((x,y)) ? "#" : map[y][x]);
+            Console.Write(seen.Keys.Any(t => t.X == x && t.Y == y) ? "#" : map[y][x]);
         }
         Console.WriteLine();
     }

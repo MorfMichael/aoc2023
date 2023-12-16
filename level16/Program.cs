@@ -6,26 +6,20 @@ string[] lines = File.ReadAllLines("input.txt");
 char[][] map = lines.Select(t => t.ToCharArray()).ToArray();
 
 ConcurrentDictionary<(int X, int Y, Direction direction), int> seen = new();
-Queue<List<(int X, int Y, Direction Direction)>> queue = new();
+Queue<(int X, int Y, Direction Direction)> queue = new();
 
-queue.Enqueue([(0, 0, Direction.Right)]);
+queue.Enqueue((0, 0, Direction.Right));
 
 while (queue.Count > 0)
 {
     var c = queue.Dequeue();
-    var cp = c[^1];
 
-    if (seen.ContainsKey(cp))
+    if (seen.ContainsKey(c))
         continue;
 
-    seen.AddOrUpdate(cp, 1, (k,v) => v+1);
+    seen.AddOrUpdate(c, 1, (k,v) => v+1);
 
-    var next = GetNext(cp.X, cp.Y, cp.Direction);
-    foreach (var n in next)
-    {
-        if (!c.Contains(n))
-        queue.Enqueue(c.Append(n).ToList());
-    }
+    GetNext(c.X, c.Y, c.Direction).ForEach(queue.Enqueue);
 }
 
 Print();

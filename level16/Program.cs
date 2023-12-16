@@ -1,30 +1,48 @@
 ﻿using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Xml;
 
 string[] lines = File.ReadAllLines("input.txt");
 
 char[][] map = lines.Select(t => t.ToCharArray()).ToArray();
 
-ConcurrentDictionary<(int X, int Y, Direction direction), int> seen = new();
-Queue<(int X, int Y, Direction Direction)> queue = new();
+var left = Enumerable.Range(0, lines.Length).Select(y => (X: 0, Y: y, Direction: Direction.Right));
+var right = Enumerable.Range(0, lines.Length).Select(y => (X: lines[0].Length-1, Y: y, Direction: Direction.Left));
+var top = Enumerable.Range(0, lines[0].Length).Select(x => (X: x, Y: 0, Direction: Direction.Down));
+var bottom = Enumerable.Range(0, lines[0].Length).Select(x => (X: x, Y: lines.Length-1, Direction: Direction.Up));
 
-queue.Enqueue((0, 0, Direction.Right));
+var entries = left.Concat(right).Concat(top).Concat(bottom).ToList();
 
-while (queue.Count > 0)
+int max = 0;
+foreach (var entry in entries)
 {
-    var c = queue.Dequeue();
-
-    if (seen.ContainsKey(c))
-        continue;
-
-    seen.AddOrUpdate(c, 1, (k,v) => v+1);
-
-    GetNext(c.X, c.Y, c.Direction).ForEach(queue.Enqueue);
+    int c = Check(entry.X, entry.Y, entry.Direction);
+    max = c > max ? c : max;
 }
 
-Print();
+Console.WriteLine(max);
 
-Console.WriteLine(seen.Keys.Select(t => (t.X,t.Y)).Distinct().Count());
+int Check(int x, int y, Direction direction)
+{
+    ConcurrentDictionary<(int X, int Y, Direction direction), int> seen = new();
+    Queue<(int X, int Y, Direction Direction)> queue = new();
+
+    queue.Enqueue((x, y, direction));
+
+    while (queue.Count > 0)
+    {
+        var c = queue.Dequeue();
+
+        if (seen.ContainsKey(c))
+            continue;
+
+        seen.AddOrUpdate(c, 1, (k, v) => v + 1);
+
+        GetNext(c.X, c.Y, c.Direction).ForEach(queue.Enqueue);
+    }
+
+    return seen.Keys.Select(t => (t.X, t.Y)).Distinct().Count();
+}
 
 List<(int X, int Y, Direction Direction)> GetNext(int x, int y, Direction direction)
 {
@@ -84,17 +102,17 @@ List<(int X, int Y, Direction Direction)> GetNext(int x, int y, Direction direct
 }
 
 
-void Print()
-{
-    for (int y = 0; y < map.Length; y++)
-    {
-        for (int x = 0; x < map[y].Length; x++)
-        {
-            Console.Write(seen.Keys.Any(t => t.X == x && t.Y == y) ? "#" : map[y][x]);
-        }
-        Console.WriteLine();
-    }
-}
+//void Print()
+//{
+//    for (int y = 0; y < map.Length; y++)
+//    {
+//        for (int x = 0; x < map[y].Length; x++)
+//        {
+//            Console.Write(seen.Keys.Any(t => t.X == x && t.Y == y) ? "#" : map[y][x]);
+//        }
+//        Console.WriteLine();
+//    }
+//}
 
 
 enum Direction

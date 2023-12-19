@@ -35,7 +35,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "level15", "level15\level15.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "level16", "level16\level16.csproj", "{3BF10527-C0CD-4BB9-ADE1-711C49A3FBC8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "level17", "level17\level17.csproj", "{FF7CCD0B-3407-4D33-97D3-9A5EB58F74FF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "level17", "level17\level17.csproj", "{FF7CCD0B-3407-4D33-97D3-9A5EB58F74FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "level19", "level19\level19.csproj", "{16DB160F-EB2B-4A83-9EB5-C0EC99C67A1A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -111,6 +113,10 @@ Global
 		{FF7CCD0B-3407-4D33-97D3-9A5EB58F74FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FF7CCD0B-3407-4D33-97D3-9A5EB58F74FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FF7CCD0B-3407-4D33-97D3-9A5EB58F74FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16DB160F-EB2B-4A83-9EB5-C0EC99C67A1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16DB160F-EB2B-4A83-9EB5-C0EC99C67A1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16DB160F-EB2B-4A83-9EB5-C0EC99C67A1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16DB160F-EB2B-4A83-9EB5-C0EC99C67A1A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

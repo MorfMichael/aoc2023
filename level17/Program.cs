@@ -17,7 +17,7 @@ while (queue.TryDequeue(out var c, out var cost))
 
     seen.Add(c);
 
-    if ((c.X,c.Y) == end && c.DirectionCount >= 4)
+    if ((c.X,c.Y) == end)
     {
         Console.WriteLine(cost);
         break;
@@ -68,7 +68,7 @@ List<(int X, int Y, Direction Direction, int DirectionCount)> GetNext(int x, int
         ]);
     }
 
-    var resultQry = result.Where(t => t.X >= 0 && t.X < map[0].Length && t.Y >= 0 && t.Y < map.Length && t.DirectionCount <= 10 && (dcount >= 4 ? true : t.Direction == direction));
+    var resultQry = result.Where(t => t.X >= 0 && t.X < map[0].Length && t.Y >= 0 && t.Y < map.Length && t.DirectionCount <= 3);
     return resultQry.ToList();
 }
 

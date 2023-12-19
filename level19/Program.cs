@@ -1,88 +1,175 @@
-﻿string text = File.ReadAllText("input.txt");
+﻿using System.Data;
+
+string text = File.ReadAllText("input.txt");
 
 string[] split = text.Split(Environment.NewLine + Environment.NewLine);
 var instructions = split[0].Split(Environment.NewLine).Select(t => t.Split("{")).Select(t => new { Instruction = t[0], Rules = t[1][..^1].Split(",").ToList() }).ToDictionary(t => t.Instruction, t => t.Rules);
-string[] values = split[1].Split(Environment.NewLine);
 
-int A = 0;
-int R = 0;
+List<(long xmin, long xmax, long mmin, long mmax, long amin, long amax, long smin, long smax)> accepted = new();
+Queue<(string instruction, (long xmin, long xmax, long mmin, long mmax, long amin, long amax, long smin, long smax) range)> queue = new();
 
-foreach (var value in values)
+queue.Enqueue(("in", (1, 4000, 1, 4000, 1, 4000, 1, 4000)));
+
+while (queue.TryDequeue(out var current))
 {
-    //{x=4,m=211,a=430,s=167}
-    var data = value[1..^1].Split(",").Select(t => (Key: t[0], Value: int.Parse(t[2..]))).ToDictionary(t => t.Key, t => t.Value);
-
-    FitCondition(instructions["in"], data, instructions);
-}
-
-Console.WriteLine(A);
-
-void FitCondition(List<string> rules, Dictionary<char, int> data, Dictionary<string, List<string>> instructions)
-{
-    foreach (var rule in rules)
+    if (current.instruction == "A")
     {
-        var split = rule.Split(":");
-        if (split.Length > 1)
-        {
-            char parameter = split[0][0];
-            char operation = split[0][1];
-            int value = int.Parse(split[0][2..]);
+        accepted.Add(current.range);
+        continue;
+    }
 
-            if (operation == '<' && data[parameter] < value)
+    if (current.instruction == "R")
+        continue;
+
+    foreach (var rule in instructions[current.instruction])
+    {
+        var rsplit = rule.Split(":");
+        if (rsplit.Length > 1)
+        {
+            char parameter = rsplit[0][0];
+            char operation = rsplit[0][1];
+            long value = long.Parse(rsplit[0][2..]);
+
+            if (operation == '<')
             {
-                if (split[1] == "A")
+                switch (parameter)
                 {
-                    A += data.Sum(t => t.Value);
-                    break;
-                }
-                else if (split[1] == "R")
-                {
-                    R += data.Sum(t => t.Value);
-                    break;
-                }
-                else
-                {
-                    FitCondition(instructions[split[1]], data, instructions);
-                    break;
+                    case 'x':
+                        if (current.range.xmin >= value)
+                        {
+                            continue;
+                        }
+                        else if (current.range.xmax < value)
+                        {
+                            queue.Enqueue((rsplit[1], current.range));
+                        }
+                        else
+                        {
+                            queue.Enqueue((rsplit[1], current.range with { xmax = value - 1 }));
+                            current.range = current.range with { xmin = value };
+                        }
+                        break;
+                    case 'm':
+                        if (current.range.mmin >= value)
+                        {
+                            continue;
+                        }
+                        else if (current.range.mmax < value)
+                        {
+                            queue.Enqueue((rsplit[1], current.range));
+                        }
+                        else
+                        {
+                            queue.Enqueue((rsplit[1], current.range with { mmax = value - 1 }));
+                            current.range = current.range with { mmin = value };
+                        }
+                        break;
+                    case 'a':
+                        if (current.range.amin >= value)
+                        {
+                            continue;
+                        }
+                        else if (current.range.amax < value)
+                        {
+                            queue.Enqueue((rsplit[1], current.range));
+                        }
+                        else
+                        {
+                            queue.Enqueue((rsplit[1], current.range with { amax = value - 1 }));
+                            current.range = current.range with { amin = value };
+                        }
+                        break;
+                    case 's':
+                        if (current.range.smin >= value)
+                        {
+                            continue;
+                        }
+                        else if (current.range.smax < value)
+                        {
+                            queue.Enqueue((rsplit[1], current.range));
+                        }
+                        else
+                        {
+                            queue.Enqueue((rsplit[1], current.range with { smax = value - 1 }));
+                            current.range = current.range with { smin = value };
+                        }
+                        break;
                 }
             }
-            else if (operation == '>' && data[parameter] > value)
+            else if (operation == '>')
             {
-                if (split[1] == "A")
+                switch (parameter)
                 {
-                    A += data.Sum(t => t.Value);
-                    break;
-                }
-                else if (split[1] == "R")
-                {
-                    R += data.Sum(t => t.Value);
-                    break;
-                }
-                else
-                {
-                    FitCondition(instructions[split[1]], data, instructions);
-                    break;
+                    case 'x':
+                        if (current.range.xmax <= value)
+                        {
+                            continue;
+                        }
+                        else if (current.range.xmin > value)
+                        {
+                            queue.Enqueue((rsplit[1], current.range));
+                        }
+                        else
+                        {
+                            queue.Enqueue((rsplit[1], current.range with { xmin = value + 1 }));
+                            current.range = current.range with { xmax = value };
+                        }
+                        break;
+                    case 'm':
+                        if (current.range.mmax <= value)
+                        {
+                            continue;
+                        }
+                        else if (current.range.mmin > value)
+                        {
+                            queue.Enqueue((rsplit[1], current.range));
+                        }
+                        else
+                        {
+                            queue.Enqueue((rsplit[1], current.range with { mmin = value + 1 }));
+                            current.range = current.range with { mmax = value };
+                        }
+                        break;
+                    case 'a':
+                        if (current.range.amax <= value)
+                        {
+                            continue;
+                        }
+                        else if (current.range.amin > value)
+                        {
+                            queue.Enqueue((rsplit[1], current.range));
+                        }
+                        else
+                        {
+                            queue.Enqueue((rsplit[1], current.range with { amin = value + 1 }));
+                            current.range = current.range with { amax = value };
+                        }
+                        break;
+                    case 's':
+                        if (current.range.smax <= value)
+                        {
+                            continue;
+                        }
+                        else if (current.range.smin > value)
+                        {
+                            queue.Enqueue((rsplit[1], current.range));
+                        }
+                        else
+                        {
+                            queue.Enqueue((rsplit[1], current.range with { smin = value + 1 }));
+                            current.range = current.range with { smax = value };
+                        }
+                        break;
                 }
             }
         }
         else
         {
-            if (split[0] == "A")
-            {
-                A += data.Sum(t => t.Value);
-                break;
-            }
-            else if (split[0] == "R")
-            {
-                R += data.Sum(t => t.Value);
-                break;
-            }
-            else
-            {
-                FitCondition(instructions[split[0]], data, instructions);
-                break;
-            }
+            queue.Enqueue((rule, current.range));
         }
     }
 }
 
+long result = accepted.Sum(x => ((x.xmax - x.xmin)+1) * ((x.mmax - x.mmin)+1) * ((x.amax - x.amin)+1) * ((x.smax - x.smin)+1));
+
+Console.WriteLine(result);

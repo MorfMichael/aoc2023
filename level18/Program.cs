@@ -4,18 +4,18 @@ string[] lines = File.ReadAllLines("input.txt");
 
 Point current = (0, 0);
 List<Point> edges = new() { current };
-int sum = 0;
+long sum = 0;
 foreach (var line in lines)
 {
     var split = line.Split();
-    int steps = int.Parse(split[1]);
+    int steps = int.Parse(split[2][2..7], System.Globalization.NumberStyles.HexNumber);
     sum += steps;
-    Point move = split[0] switch
+    Point move = split[2][7] switch
     {
-        "R" => (steps, 0),
-        "D" => (0, steps),
-        "L" => (-steps, 0),
-        "U" => (0, -steps),
+        '0' => (steps, 0),
+        '1' => (0, steps),
+        '2' => (-steps, 0),
+        '3' => (0, -steps),
         _ => (0, 0)
     };
 
@@ -34,17 +34,17 @@ var tmp = area - Math.Floor(sum / 2d) + 1;
 Console.WriteLine(sum + tmp);
 
 
-public struct Point(int x, int y)
+public struct Point(long x, long y)
 {
-    public int X { get; set; } = x;
-    public int Y { get; set; } = y;
+    public long X { get; set; } = x;
+    public long Y { get; set; } = y;
 
-    public static implicit operator (int X, int Y)(Point p)
+    public static implicit operator (long X, long Y)(Point p)
     {
         return (p.X, p.Y);
     }
 
-    public static implicit operator Point((int x, int y) value)
+    public static implicit operator Point((long x, long y) value)
     {
         return new Point(value.x, value.y);
     }

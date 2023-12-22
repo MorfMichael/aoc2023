@@ -1,9 +1,13 @@
 ﻿
 using System.Collections.Concurrent;
+using System.ComponentModel;
 
-string[] lines = File.ReadAllLines("sample2.txt");
+string[] lines = File.ReadAllLines("input.txt");
 
+Dictionary<string, Module> modules = new();
 Dictionary<string, string[]> destinations = new();
+
+Queue<(string source, string[] destinations, string? previous, bool impulse)> queue = new();
 
 foreach (var line in lines)
 {
@@ -11,88 +15,81 @@ foreach (var line in lines)
     string key = "%&".Contains(split[0][0]) ? split[0][1..] : split[0];
     var D = split[1].Split(", ", StringSplitOptions.RemoveEmptyEntries);
 
-    if (destinations.ContainsKey(key))
-    {
-        destinations[key] = new List<string>([.. destinations[key], .. D]).Distinct().ToArray();
-    }
-    else
-    {
+    if (!modules.ContainsKey(key))
+        modules.Add(key, Module.GetModule(split[0]));
+
+    if (!destinations.ContainsKey(key))
         destinations.Add(key, D);
+}
+
+var conjunctions = modules.Select(t => (t.Key, Module: t.Value as ConjunctionModule)).Where(t => t.Module != null).ToList();
+foreach (var c in conjunctions)
+{
+    var inputs = destinations.Where(t => t.Value.Contains(c.Key)).Select(t => t.Key).ToArray();
+    c.Module.UpdateMemory(inputs);
+}
+
+
+long high = 0;
+long low = 0;
+
+for (int i = 0; i < 1000; i++)
+{
+    queue.Enqueue(("button", ["broadcaster"], null, false));
+    while (queue.TryDequeue(out var q))
+    {
+        bool? impulse = q.impulse;
+        if (modules.ContainsKey(q.source))
+        {
+            impulse = modules[q.source].ConvertImpulse(q.previous, impulse.Value);
+        }
+
+        if (!impulse.HasValue)
+            continue;
+
+        foreach (var d in q.destinations)
+        {
+
+            low += impulse.Value ? 0 : 1;
+            high += impulse.Value ? 1 : 0;
+            //Console.WriteLine(q.source + " -" + (impulse.Value ? "high" : "low") + "-> " + d);
+            if (destinations.ContainsKey(d))
+                queue.Enqueue((d, destinations[d], q.source, impulse.Value));
+        }
     }
 }
 
-var distinct = destinations.SelectMany(t => t.Value).Distinct().Where(t => !destinations.ContainsKey(t)).ToList();
-foreach (var d in distinct)
-{
-    destinations.Add(d, []);
-}
-
-
-BroadcasterModule broadcaster = new BroadcasterModule("broadcaster", destinations);
-int low = 0, high = 0;
-//for (int i = 0; i < 1000; i++)
-{
-    low++; // button
-    var (clow, chigh) = broadcaster.HandleImpulse(false);
-    low += clow;
-    high += chigh;
-}
+Console.WriteLine(low);
+Console.WriteLine(high);
 Console.WriteLine(low * high);
 
-abstract class Module(string name, Dictionary<string, string[]> destinations)
+class Module(string name)
 {
     public string Name { get; set; } = name;
 
-    public List<Module> Destinations { get; set; } = destinations[name].Select(t => GetModule(t, destinations)).ToList();
-
-    public (int low, int high) HandleImpulse(bool impulse)
+    public virtual bool? ConvertImpulse(string module, bool impulse)
     {
-        Queue<(bool impulse, Module module)> queue = new();
-        int low = 0, high = 0;
-        impulse = ConvertImpulse(Name, impulse);
-        high += impulse ? 1 : 0;
-        low += impulse ? 0 : 1;
-        //Destinations.ForEach(x => queue.Enqueue((impulse, x)));
-        foreach (var m in Destinations)
-        {
-            Console.WriteLine(Name + " -> " + impulse + " -> " + m.Name);
-
-            queue.Enqueue((impulse, m));
-
-        }
-
-        while (queue.TryDequeue(out var current))
-        {
-            (int mlow, int mhigh) = current.module.HandleImpulse(current.impulse);
-            low += mlow;
-            high += mhigh; 
-        }
-
-        return (low, high);
+        return impulse;
     }
 
-    public abstract bool ConvertImpulse(string module, bool impulse);
-
-    public static Module GetModule(string name, Dictionary<string, string[]> destinations)
+    public static Module GetModule(string name)
     {
         if (name.StartsWith("%"))
-            return new FlipFlopModule(name, destinations);
+            return new FlipFlopModule(name[1..]);
         else if (name.StartsWith("&"))
-            return new ConjunctionModule(name, destinations);
-        else if (name == "broadcaster")
-            return new BroadcasterModule(name, destinations);
-        else
-            return new DummyModule(name, destinations);
+            return new ConjunctionModule(name[1..]);
+
+        return new Module(name);
         //throw new NotImplementedException();
     }
 }
 
 
-class FlipFlopModule(string name, Dictionary<string, string[]> destinations) : Module(name, destinations)
+class FlipFlopModule(string name) : Module(name)
 {
     public bool On { get; set; }
 
-    public override bool ConvertImpulse(string module, bool impulse)
+    public override bool? ConvertImpulse(string module, bool impulse)
     {
         if (!impulse)
         {
@@ -100,37 +97,26 @@ class FlipFlopModule(string name, Dictionary<string, string[]> destinations) : M
             return On;
         }
 
-        return impulse;
+        return null;
     }
 }
 
-class ConjunctionModule(string name, Dictionary<string, string[]> destinations) : Module(name, destinations)
+class ConjunctionModule(string name) : Module(name)
 {
-    ConcurrentDictionary<string, bool> Memory = new();
+    private Dictionary<string, bool> _memory = new();
 
-    public override bool ConvertImpulse(string module, bool impulse)
+    public void UpdateMemory(string[] inputs)
     {
-        Memory.AddOrUpdate(module, false, (k,v) => impulse);
-        return !Memory.All(t => t.Value);
-    }
-}
-
-class BroadcasterModule(string name, Dictionary<string, string[]> destinations) : Module(name, destinations)
-{
-    public override bool ConvertImpulse(string module, bool impulse)
-    {
-        return impulse;
-    }
-}
-
-class DummyModule(string name, Dictionary<string, string[]> destinations) : Module(name, destinations)
-{
-    public new void HandleImpulse(bool impulse)
-    {
+        foreach (var key in inputs.Where(t => !_memory.ContainsKey(t)))
+        {
+            _memory.Add(key, false);
+        }
     }
 
-    public override bool ConvertImpulse(string module, bool impulse)
+    public override bool? ConvertImpulse(string module, bool impulse)
     {
-        return impulse;
+        _memory[module] = impulse;
+
+        return !_memory.All(t => t.Value);
     }
 }
